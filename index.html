@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PHYS 311 - Lab 9</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+
+
+<body>
+  <h1>PHYS 311 - Lab 9: Multi-Body Simulation</h1>
+
+  <div class="controls">
+
+
+  <label for="sceneSelect">Choose scene:</label>
+  <select id="sceneSelect">
+    <option value="billiards">Billiards / Ball Pit</option>
+    <option value="gravity">Gravitational N-Body</option>
+    <option value="custom">Student Choice</option>
+  </select>
+
+  <label for="integratorSelect">Integrator:</label>
+  <select id="integratorSelect">
+    <option value="euler">Euler-Cromer</option>
+    <option value="verlet">Velocity Verlet</option>
+  </select>
+
+  <label for="restitution">Bounciness:</label>
+<input
+  type="range"
+  id="restitution"
+  min="0"
+  max="1"
+  step="0.1"
+  value="1"
+>
+<span id="restitutionValue">1.0</span>
+</div>
+
+<canvas id="canvas" width="900" height="600"></canvas>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
