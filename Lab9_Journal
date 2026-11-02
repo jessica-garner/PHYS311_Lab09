@@ -1,0 +1,3 @@
+Reflect on what porting revealed about your Python design?  What would you architect differently if you started over?
+
+I learned that I my python design held a lot of inconsistencies that porting would not hide. If I had to start over, I would switch to javascript packages to make the browser interpretation easier.
