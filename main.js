@@ -15,6 +15,63 @@ const camera = new Camera(canvas, 20);
 const renderer = new Renderer(canvas, camera);
 const hud = new HUD();
 
+
+
+// Mouse interaction
+let selectedBody = null;
+let isDragging = false;
+
+canvas.addEventListener("mousedown", (event) => {
+  const rect = canvas.getBoundingClientRect();
+
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  const mouse = camera.toWorld(mouseX, mouseY);
+
+  selectedBody = null;
+
+  // Find the body closest to the mouse.
+  for (const body of world.bodies) {
+    const dx = body.pos.x - mouse.x;
+    const dy = body.pos.y - mouse.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= body.radius) {
+      selectedBody = body;
+      isDragging = true;
+      break;
+    }
+  }
+});
+
+canvas.addEventListener("mousemove", (event) => {
+  if (!isDragging || !selectedBody) return;
+
+  const rect = canvas.getBoundingClientRect();
+
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  const mouse = camera.toWorld(mouseX, mouseY);
+
+  selectedBody.pos.x = mouse.x;
+  selectedBody.pos.y = mouse.y;
+
+  selectedBody.vel.x = 0;
+  selectedBody.vel.y = 0;
+});
+
+canvas.addEventListener("mouseup", () => {
+  isDragging = false;
+  selectedBody = null;
+});
+
+canvas.addEventListener("mouseleave", () => {
+  isDragging = false;
+  selectedBody = null;
+});
+
 let integrator = new EulerCromer();
 
 function createScene(name) {
@@ -137,7 +194,13 @@ restitutionSlider.addEventListener("input", () => {
   }
 });
 
+const speedSlider = document.getElementById("speed");
+const speedValue = document.getElementById("speedValue");
 
+speedSlider.addEventListener("input", () => {
+  speed = Number(speedSlider.value);
+  speedValue.textContent = speed.toFixed(2) + "x";
+});
 
 
 const integratorSelect = document.getElementById("integratorSelect");
@@ -152,9 +215,88 @@ integratorSelect.addEventListener("change", () => {
   world.integrator = integrator;
 });
 
+
+
+
+// Pause / Resume
+const pauseButton = document.getElementById("pauseButton");
+
+pauseButton.addEventListener("click", () => {
+  paused = !paused;
+  pauseButton.textContent = paused ? "Resume" : "Pause";
+});
+
+
+// Step
+const stepButton = document.getElementById("stepButton");
+
+stepButton.addEventListener("click", () => {
+  paused = true;
+  stepOnce = true;
+  accumulator = 0;
+  pauseButton.textContent = "Resume";
+});
+
+
+// Reset
+const resetButton = document.getElementById("resetButton");
+
+resetButton.addEventListener("click", () => {
+  world = createScene(sceneSelect.value);
+
+  for (const body of world.bodies) {
+    body.restitution = Number(restitutionSlider.value);
+  }
+
+  accumulator = 0;
+  stepOnce = false;
+  hud.resetEnergy(world);
+});
+
+
+// Speed
+const speedSlider = document.getElementById("speed");
+const speedValue = document.getElementById("speedValue");
+
+speedSlider.addEventListener("input", () => {
+  speed = Number(speedSlider.value);
+  speedValue.textContent = speed.toFixed(2) + "x";
+});
+
+
+
+
+
+
+
 // Animation loop.
 let previousTime = 0;
 let accumulator = 0;
+
+let paused = false;
+let stepOnce = false;
+let speed = 1;
+
+const pauseButton = document.getElementById("pauseButton");
+const stepButton = document.getElementById("stepButton");
+const resetButton = document.getElementById("resetButton");
+
+pauseButton.addEventListener("click", () => {
+  paused = !paused;
+  pauseButton.textContent = paused ? "Resume" : "Pause";
+});
+
+stepButton.addEventListener("click", () => {
+  if (paused) {
+    stepOnce = true;
+  }
+});
+
+resetButton.addEventListener("click", () => {
+  world = createScene(sceneSelect.value);
+  accumulator = 0;
+  hud.resetEnergy(world);
+});
 
 const fixedDt = 1 / 120;
 const maxFrameTime = 0.05;
@@ -163,6 +305,7 @@ let fps = 0;
 let frameCount = 0;
 let fpsTimer = 0;
 
+
 function animate(timestamp) {
   if (previousTime === 0) previousTime = timestamp;
 
@@ -170,16 +313,45 @@ function animate(timestamp) {
   previousTime = timestamp;
 
   frameTime = Math.min(frameTime, maxFrameTime);
-  accumulator += frameTime;
 
   const physicsStart = performance.now();
 
+ /* idk if I want to keep this yet
+ 
+    if (!paused) {
+    accumulator += frameTime * speed;
+  }
+
+  if (paused && stepOnce) {
+    world.step(fixedDt);
+    stepOnce = false;
+  } else if (!paused) {
+    while (accumulator >= fixedDt) {
+      world.step(fixedDt);
+      accumulator -= fixedDt;
+    }
+  }
+
+  const physicsMs = performance.now() - physicsStart;*/
+
+const physicsStart = performance.now();
+
+if (!paused) {
+  accumulator += frameTime * speed;
+}
+
+if (paused && stepOnce) {
+  world.step(fixedDt);
+  stepOnce = false;
+} else if (!paused) {
   while (accumulator >= fixedDt) {
     world.step(fixedDt);
     accumulator -= fixedDt;
   }
+}
 
-  const physicsMs = performance.now() - physicsStart;
+const physicsMs = performance.now() - physicsStart;
+
 
   frameCount++;
   fpsTimer += frameTime;
@@ -204,3 +376,10 @@ function animate(timestamp) {
 }
 
 requestAnimationFrame(animate);
+
+
+
+
+
+
+
