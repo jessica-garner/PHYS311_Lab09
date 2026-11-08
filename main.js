@@ -247,6 +247,29 @@ resetButton.addEventListener("click", () => {
   hud.resetEnergy(world);
 });
 
+// Keyboard shortcut stuff
+window.addEventListener("keydown", (event) => {
+
+  // Don't interfere with typing or using form controls
+  if (event.target.closest("input, select, textarea, button")) {
+    return;
+  }
+
+  if (event.code === "Space") {
+    event.preventDefault();
+    pauseButton.click();
+  }
+
+  if (event.code === "KeyN") {
+    stepButton.click();
+  }
+
+  if (event.code === "KeyR") {
+    resetButton.click();
+  }
+
+});
+
 // Animation loop
 function animate(timestamp) {
   if (previousTime === 0) previousTime = timestamp;
